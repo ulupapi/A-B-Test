@@ -542,17 +542,9 @@
 
       document.getElementById("maxminText").textContent = `maxmin = ${fmt(state.saddle.lowerValue)}`;
       document.getElementById("minmaxText").textContent = `minmax = ${fmt(state.saddle.upperValue)}`;
-      document.getElementById("saddleNote").innerHTML = state.saddle.hasSaddle
-        ? `<div class="note ok">Седловая точка есть, игра решается в чистых стратегиях.</div>`
-        : `<div class="note warn">Седловой точки нет, нужны смешанные стратегии.</div>`;
+      document.getElementById("saddleNote").innerHTML = "";
 
-      const a11 = state.reduced.matrix[0][0];
-      const a12 = state.reduced.matrix[0][1];
-      const a21 = state.reduced.matrix[1][0];
-      const a22 = state.reduced.matrix[1][1];
-      document.getElementById("graphFormula").innerHTML =
-        `Для сокращенной игры 2x2: g1(p1)=p1*${a11}+(1-p1)*${a21}, g2(p1)=p1*${a12}+(1-p1)*${a22}. ` +
-        `В оптимуме g1(p1*)=g2(p1*), поэтому p1*=${fmt(state.graph.pOpt)}, p2*=${fmt(state.graph.p2Opt)}, V=${fmt(state.graph.value)}.`;
+      document.getElementById("graphFormula").innerHTML = "";
     }
 
     function renderGraph(state) {
@@ -605,7 +597,6 @@
       document.getElementById("lpStats").innerHTML = `
         <p><span class="mono">Решение ЛП для A: p1=${fmt(state.lp.p[0])}, p2=${fmt(state.lp.p[1])}, V=${fmt(state.lp.value)}</span></p>
         <p><span class="mono">Решение двойственной ЛП для B: q1=${fmt(state.lp.q[0])}, q2=${fmt(state.lp.q[1])}, q3=${fmt(state.lp.q[2])}, V=${fmt(state.lp.value)}</span></p>
-        <p class="small">На этой странице ЛП вычисляется эквивалентно через редукцию доминируемой стратегии и аналитическое решение 2x2, что совпадает с решением linprog из Streamlit-версии.</p>
       `;
     }
 
