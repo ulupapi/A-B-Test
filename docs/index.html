@@ -595,8 +595,8 @@
 
     function renderLP(state) {
       document.getElementById("lpStats").innerHTML = `
-        <p><span class="mono">Решение ЛП для A: p1=${fmt(state.lp.p[0])}, p2=${fmt(state.lp.p[1])}, V=${fmt(state.lp.value)}</span></p>
-        <p><span class="mono">Решение двойственной ЛП для B: q1=${fmt(state.lp.q[0])}, q2=${fmt(state.lp.q[1])}, q3=${fmt(state.lp.q[2])}, V=${fmt(state.lp.value)}</span></p>
+        <p>Решение ЛП для A: p1=${fmt(state.lp.p[0])}, p2=${fmt(state.lp.p[1])}, V=${fmt(state.lp.value)}</p>
+        <p>Решение двойственной ЛП для B: q1=${fmt(state.lp.q[0])}, q2=${fmt(state.lp.q[1])}, q3=${fmt(state.lp.q[2])}, V=${fmt(state.lp.value)}</p>
       `;
     }
 
