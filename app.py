@@ -427,21 +427,6 @@ def main():
     q_graph_text = ", ".join([f"q{i+1}={q_graph[i]:.4f}" for i in range(len(q_graph))])
     st.write(f"Оптимальная смешанная стратегия B (с учетом исходной 2x3): {q_graph_text}")
 
-    # Явно показываем аналитические формулы для reduced-игры 2x2
-    if reduced_matrix.shape == (2, 2):
-        a11, a12 = reduced_matrix[0, 0], reduced_matrix[0, 1]
-        a21, a22 = reduced_matrix[1, 0], reduced_matrix[1, 1]
-        st.markdown(
-            f"""
-Для сокращенной игры `2x2` ({reduced_cols[0]}, {reduced_cols[1]}):
-
-- `g_1(p1) = p1*{a11:g} + (1-p1)*{a21:g} = {a21:g} + ({a11 - a21:g})*p1`
-- `g_2(p1) = p1*{a12:g} + (1-p1)*{a22:g} = {a22:g} + ({a12 - a22:g})*p1`
-- В оптимуме: `g_1(p1*) = g_2(p1*)`
-- Получаем: `p1* = {graph_res['p_opt']:.4f}`, `p2* = {graph_res['p2_opt']:.4f}`, `V = {graph_res['value']:.4f}`
-            """
-        )
-
     st.subheader("5) Симплекс-метод (линейное программирование, scipy.optimize.linprog)")
     p_lp, v_lp_a, _ = simplex_solution_for_A(PAYOFF_MATRIX)
     q_lp, v_lp_b, _ = simplex_solution_for_B(PAYOFF_MATRIX)
