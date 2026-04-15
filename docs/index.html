@@ -12,12 +12,8 @@
       --text: #10223d;
       --muted: #4b6283;
       --line: #dbe8f9;
-      --accent: #0ea5e9;
-      --accent-2: #0369a1;
-      --ok-bg: #e6f9ef;
-      --ok-text: #166534;
-      --warn-bg: #fff7e6;
-      --warn-text: #92400e;
+      --accent: #4b5563;
+      --accent-2: #374151;
     }
     * { box-sizing: border-box; }
     body {
@@ -95,14 +91,17 @@
       border-radius: 10px;
       padding: 10px 12px;
       font-size: 14px;
+      background: #f3f4f6;
+      color: #1f2937;
+      border: 1px solid #e5e7eb;
     }
     .note.ok {
-      background: var(--ok-bg);
-      color: var(--ok-text);
+      background: #f3f4f6;
+      color: #1f2937;
     }
     .note.warn {
-      background: var(--warn-bg);
-      color: var(--warn-text);
+      background: #f3f4f6;
+      color: #1f2937;
     }
     table {
       width: 100%;
@@ -126,9 +125,9 @@
     .mono {
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 14px;
-      background: #eef6ff;
-      color: #1e3a8a;
-      border: 1px solid #dbeafe;
+      background: #f3f4f6;
+      color: #111827;
+      border: 1px solid #e5e7eb;
       border-radius: 8px;
       padding: 2px 6px;
       display: inline-block;
@@ -227,7 +226,6 @@
       <article class="card">
         <h2>7) Сравнение результатов</h2>
         <div id="comparisonTable"></div>
-        <div class="note ok">Для защиты: метод Брауна–Робинсона является численным и приближенным, но при росте числа итераций его оценка сходится к точной цене игры.</div>
       </article>
     </section>
   </div>
@@ -560,12 +558,16 @@
     function renderGraph(state) {
       const traces = [];
       for (const c of colLabels) {
+        let lineStyle = { width: 2, color: "#374151" };
+        if (c.startsWith("B1")) lineStyle = { width: 2, dash: "dot", color: "#6b7280" };
+        if (c.startsWith("B2")) lineStyle = { width: 2, color: "#111827" };
+        if (c.startsWith("B3")) lineStyle = { width: 2, color: "#9ca3af" };
         traces.push({
           x: state.graph.pGrid,
           y: state.graph.lines[c],
           mode: "lines",
           name: c,
-          line: c.startsWith("B1") ? { width: 2, dash: "dot" } : { width: 2 }
+          line: lineStyle
         });
       }
       traces.push({
@@ -580,7 +582,7 @@
         y: [state.graph.value],
         mode: "markers",
         name: "Оптимум",
-        marker: { size: 10, color: "#dc2626" }
+        marker: { size: 10, color: "#111827" }
       });
 
       Plotly.newPlot("graphChart", traces, {
@@ -618,10 +620,10 @@
       `;
 
       Plotly.newPlot("convChart", [
-        { x: br.history.map(r => r.k), y: br.history.map(r => r.lowerV), mode: "lines", name: "Нижняя оценка" },
-        { x: br.history.map(r => r.k), y: br.history.map(r => r.upperV), mode: "lines", name: "Верхняя оценка" },
-        { x: br.history.map(r => r.k), y: br.history.map(r => r.vAvg), mode: "lines", name: "Средняя оценка V" },
-        { x: [1, iterations], y: [state.lp.value, state.lp.value], mode: "lines", name: "V (экв. linprog)", line: { dash: "dash", color: "#16a34a" } }
+        { x: br.history.map(r => r.k), y: br.history.map(r => r.lowerV), mode: "lines", name: "Нижняя оценка", line: { color: "#6b7280" } },
+        { x: br.history.map(r => r.k), y: br.history.map(r => r.upperV), mode: "lines", name: "Верхняя оценка", line: { color: "#111827" } },
+        { x: br.history.map(r => r.k), y: br.history.map(r => r.vAvg), mode: "lines", name: "Средняя оценка V", line: { color: "#9ca3af" } },
+        { x: [1, iterations], y: [state.lp.value, state.lp.value], mode: "lines", name: "V (экв. linprog)", line: { dash: "dash", color: "#374151" } }
       ], {
         margin: { l: 52, r: 20, t: 30, b: 45 },
         title: "Сходимость метода Брауна–Робинсона",
