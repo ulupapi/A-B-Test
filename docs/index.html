@@ -3,131 +3,677 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>A/B стратегия рекомендаций — Теория игр</title>
+  <title>Стратегия A/B тестирования — Теория игр</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
     :root {
-      --bg: #f4f7fb;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #475569;
+      --bg: #f5f8fc;
+      --surface: #ffffff;
+      --text: #10223d;
+      --muted: #4b6283;
+      --line: #dbe8f9;
       --accent: #0ea5e9;
-      --accent2: #0369a1;
-      --border: #dbeafe;
+      --accent-2: #0369a1;
+      --ok-bg: #e6f9ef;
+      --ok-text: #166534;
+      --warn-bg: #fff7e6;
+      --warn-text: #92400e;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: radial-gradient(circle at 20% 10%, #e0f2fe 0%, var(--bg) 55%);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
       color: var(--text);
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
+      background:
+        radial-gradient(circle at 6% 0%, #dff4ff 0, transparent 30%),
+        radial-gradient(circle at 94% 16%, #e9f2ff 0, transparent 24%),
+        var(--bg);
     }
-    .card {
-      width: min(860px, 100%);
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 20px 40px rgba(14, 116, 144, 0.12);
-      padding: 28px;
+    .wrap {
+      width: min(1180px, 100% - 32px);
+      margin: 28px auto 40px;
+    }
+    .hero {
+      background: linear-gradient(135deg, #ffffff 0%, #f4faff 60%, #ebf5ff 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 14px 30px rgba(15, 86, 150, 0.08);
     }
     h1 {
-      margin: 0 0 10px;
-      font-size: clamp(24px, 3.2vw, 36px);
-      line-height: 1.15;
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.1;
+      letter-spacing: 0.2px;
     }
-    p {
-      margin: 8px 0;
+    .sub {
+      margin: 0;
       color: var(--muted);
-      font-size: 16px;
-      line-height: 1.5;
+      font-size: 17px;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      margin: 20px 0;
-    }
-    .item {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
-      background: #f8fbff;
-    }
-    .item b { display: block; margin-bottom: 4px; }
-    .actions {
+    .links {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 18px;
+      margin-top: 16px;
     }
     .btn {
+      display: inline-block;
       text-decoration: none;
-      color: white;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
       padding: 10px 14px;
-      font-weight: 600;
-      font-size: 15px;
+      border-radius: 10px;
       transition: transform .15s ease;
     }
     .btn:hover { transform: translateY(-1px); }
-    code {
-      background: #eff6ff;
-      border: 1px solid #dbeafe;
-      padding: 2px 6px;
-      border-radius: 6px;
-      color: #1d4ed8;
+    .grid {
+      margin-top: 18px;
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(12, 1fr);
     }
-    .foot {
-      margin-top: 16px;
+    .card {
+      grid-column: span 12;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 22px rgba(10, 66, 120, 0.06);
+    }
+    .half { grid-column: span 6; }
+    .third { grid-column: span 4; }
+    h2 {
+      margin: 0 0 10px;
+      font-size: 21px;
+      line-height: 1.2;
+    }
+    .note {
+      margin-top: 10px;
+      border-radius: 10px;
+      padding: 10px 12px;
       font-size: 14px;
-      color: #64748b;
+    }
+    .note.ok {
+      background: var(--ok-bg);
+      color: var(--ok-text);
+    }
+    .note.warn {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      font-size: 14px;
+    }
+    th, td {
+      padding: 8px 9px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f4f9ff;
+      font-weight: 700;
+    }
+    tr:last-child td { border-bottom: none; }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      background: #eef6ff;
+      color: #1e3a8a;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      padding: 2px 6px;
+      display: inline-block;
+      margin: 2px 0;
+    }
+    .stat-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fbfdff;
+    }
+    .stat b { display: block; margin-bottom: 4px; }
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    input[type="range"] { width: 100%; }
+    .small { font-size: 13px; color: var(--muted); }
+    details { margin-top: 10px; }
+    summary { cursor: pointer; font-weight: 700; }
+    @media (max-width: 900px) {
+      .half, .third { grid-column: span 12; }
     }
   </style>
 </head>
 <body>
-  <main class="card">
-    <h1>Стратегия A/B тестирования алгоритма рекомендаций</h1>
-    <p>
-      Веб-приложение на <b>Streamlit</b> по теории игр: доминирование, седловая точка,
-      графоаналитический метод, симплекс-метод и Браун–Робинсон.
-    </p>
-
-    <section class="grid">
-      <div class="item">
-        <b>Исходная матрица</b>
-        A1: [9, 17, 7], A2: [15, 7, 13]
-      </div>
-      <div class="item">
-        <b>Результат</b>
-        Цена игры: V = 10.75
-      </div>
-      <div class="item">
-        <b>Оптимум A</b>
-        p1 = 0.375, p2 = 0.625
-      </div>
-      <div class="item">
-        <b>Оптимум B</b>
-        q1 = 0, q2 = 0.375, q3 = 0.625
+  <div class="wrap">
+    <section class="hero">
+      <h1>Стратегия A/B тестирования алгоритма рекомендаций</h1>
+      <p class="sub">Визуализация решения задачи по теории игр: доминирование, maxmin/minmax, графоаналитический метод, ЛП и Браун–Робинсон.</p>
+      <div class="links">
+        <a class="btn" href="https://github.com/ulupapi/A-B-Test" target="_blank" rel="noopener noreferrer">Репозиторий GitHub</a>
+        <a class="btn" href="https://github.com/ulupapi/A-B-Test/blob/main/app.py" target="_blank" rel="noopener noreferrer">Код Streamlit</a>
+        <a class="btn" href="http://localhost:8501" target="_blank" rel="noopener noreferrer">Локальный Streamlit</a>
       </div>
     </section>
 
-    <p>
-      Если приложение запускается локально, откройте <code>http://localhost:8501</code>.
-    </p>
+    <section class="grid">
+      <article class="card">
+        <h2>1) Исходная матрица и постановка</h2>
+        <p>
+          Игрок A (Команда) максимизирует прирост конверсии. Игрок B (Природа/Аналитика) минимизирует прирост A.
+        </p>
+        <div id="payoffTable"></div>
+      </article>
 
-    <div class="actions">
-      <a class="btn" href="http://localhost:8501" target="_blank" rel="noopener noreferrer">Открыть локально</a>
-      <a class="btn" href="https://github.com/ulupapi/A-B-Test" target="_blank" rel="noopener noreferrer">Репозиторий GitHub</a>
-      <a class="btn" href="https://github.com/ulupapi/A-B-Test/blob/main/README.md" target="_blank" rel="noopener noreferrer">README проекта</a>
-    </div>
+      <article class="card half">
+        <h2>2) Анализ доминирования</h2>
+        <div id="dominationText"></div>
+        <div id="reducedTable"></div>
+      </article>
 
-    <p class="foot">
-      Для GitHub Pages используйте папку <code>docs</code> в ветке <code>main</code>.
-    </p>
-  </main>
+      <article class="card half">
+        <h2>3) Седловая точка</h2>
+        <div id="saddleTables"></div>
+        <p><span class="mono" id="maxminText"></span> <span class="mono" id="minmaxText"></span></p>
+        <div id="saddleNote"></div>
+      </article>
+
+      <article class="card">
+        <h2>4) Графоаналитический метод (2xN)</h2>
+        <div id="graphChart" style="height:470px;"></div>
+        <div id="graphStats" class="stat-grid"></div>
+        <p class="small" id="graphFormula"></p>
+      </article>
+
+      <article class="card half">
+        <h2>5) Симплекс-метод (эквивалент через ЛП)</h2>
+        <div id="lpStats"></div>
+      </article>
+
+      <article class="card half">
+        <h2>6) Метод Брауна–Робинсона</h2>
+        <label for="iterSlider">Число итераций: <span id="iterVal">500</span></label>
+        <input id="iterSlider" type="range" min="100" max="5000" step="100" value="500" />
+        <div id="brStats" class="stat-grid" style="margin-top:12px;"></div>
+      </article>
+
+      <article class="card">
+        <div id="convChart" style="height:410px;"></div>
+        <h3 style="margin:10px 0 8px;">Таблица итераций (последние 25 шагов)</h3>
+        <div id="brTailTable"></div>
+        <details>
+          <summary>Показать полную таблицу итераций</summary>
+          <div id="brFullTable" style="margin-top:8px;"></div>
+        </details>
+      </article>
+
+      <article class="card">
+        <h2>7) Сравнение результатов</h2>
+        <div id="comparisonTable"></div>
+        <div class="note ok">Для защиты: метод Брауна–Робинсона является численным и приближенным, но при росте числа итераций его оценка сходится к точной цене игры.</div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    const rowLabels = ["A1 (Коллаборативная)", "A2 (Контентная)"];
+    const colLabels = ["B1 (Активные)", "B2 (Случайные)", "B3 (Пассивные)"];
+    const A = [
+      [9, 17, 7],
+      [15, 7, 13]
+    ];
+
+    function fmt(x, digits = 4) {
+      return Number(x).toFixed(digits);
+    }
+
+    function argMax(arr) {
+      let idx = 0;
+      for (let i = 1; i < arr.length; i++) if (arr[i] > arr[idx]) idx = i;
+      return idx;
+    }
+
+    function argMin(arr) {
+      let idx = 0;
+      for (let i = 1; i < arr.length; i++) if (arr[i] < arr[idx]) idx = i;
+      return idx;
+    }
+
+    function dot(a, b) {
+      let s = 0;
+      for (let i = 0; i < a.length; i++) s += a[i] * b[i];
+      return s;
+    }
+
+    function transpose(matrix) {
+      return matrix[0].map((_, j) => matrix.map(row => row[j]));
+    }
+
+    function findDominatedStrategies(matrix) {
+      const m = matrix.length;
+      const n = matrix[0].length;
+      const dominatedRows = [];
+      const dominatedCols = [];
+
+      for (let i = 0; i < m; i++) {
+        for (let k = 0; k < m; k++) {
+          if (i === k) continue;
+          const ge = matrix[i].every((v, j) => v >= matrix[k][j]);
+          const g = matrix[i].some((v, j) => v > matrix[k][j]);
+          if (ge && g) dominatedRows.push([k, i]);
+        }
+      }
+
+      for (let j = 0; j < n; j++) {
+        for (let l = 0; l < n; l++) {
+          if (j === l) continue;
+          let le = true;
+          let s = false;
+          for (let i = 0; i < m; i++) {
+            if (!(matrix[i][j] <= matrix[i][l])) le = false;
+            if (matrix[i][j] < matrix[i][l]) s = true;
+          }
+          if (le && s) dominatedCols.push([l, j]);
+        }
+      }
+
+      return { dominatedRows, dominatedCols };
+    }
+
+    function reduceByDominance(matrix, rows, cols) {
+      let curM = matrix.map(r => [...r]);
+      let curR = [...rows];
+      let curC = [...cols];
+      const steps = [];
+
+      let changed = true;
+      while (changed) {
+        changed = false;
+        const { dominatedRows, dominatedCols } = findDominatedStrategies(curM);
+
+        if (dominatedRows.length > 0) {
+          const [rowToRemove, rowDom] = dominatedRows[0];
+          steps.push(`Удалена ${curR[rowToRemove]}: доминируется ${curR[rowDom]}`);
+          curM.splice(rowToRemove, 1);
+          curR.splice(rowToRemove, 1);
+          changed = true;
+          continue;
+        }
+
+        if (dominatedCols.length > 0) {
+          const [colToRemove, colDom] = dominatedCols[0];
+          steps.push(`Удалена ${curC[colToRemove]}: доминируется ${curC[colDom]}`);
+          curM = curM.map(row => row.filter((_, idx) => idx !== colToRemove));
+          curC.splice(colToRemove, 1);
+          changed = true;
+        }
+      }
+
+      return { matrix: curM, rows: curR, cols: curC, steps };
+    }
+
+    function saddlePointAnalysis(matrix) {
+      const rowMins = matrix.map(row => Math.min(...row));
+      const cols = transpose(matrix);
+      const colMaxs = cols.map(col => Math.max(...col));
+      const lowerValue = Math.max(...rowMins);
+      const upperValue = Math.min(...colMaxs);
+      return {
+        rowMins,
+        colMaxs,
+        lowerValue,
+        upperValue,
+        hasSaddle: Math.abs(lowerValue - upperValue) < 1e-9
+      };
+    }
+
+    function solve2xNByCandidates(matrix) {
+      const n = matrix[0].length;
+      const candidates = [0, 1];
+
+      for (let j = 0; j < n; j++) {
+        for (let k = j + 1; k < n; k++) {
+          const den = (matrix[0][j] - matrix[1][j]) - (matrix[0][k] - matrix[1][k]);
+          if (Math.abs(den) < 1e-12) continue;
+          const p = (matrix[1][k] - matrix[1][j]) / den;
+          if (p >= 0 && p <= 1) candidates.push(p);
+        }
+      }
+
+      let bestP = 0;
+      let bestV = -Infinity;
+      for (const p of candidates) {
+        const values = [];
+        for (let j = 0; j < n; j++) {
+          const v = p * matrix[0][j] + (1 - p) * matrix[1][j];
+          values.push(v);
+        }
+        const vv = Math.min(...values);
+        if (vv > bestV) {
+          bestV = vv;
+          bestP = p;
+        }
+      }
+      return { p1: bestP, p2: 1 - bestP, value: bestV };
+    }
+
+    function graphicalSolution2xN(matrixOriginal, matrixReduced, reducedColLabels, originalColLabels) {
+      const pGrid = [];
+      for (let i = 0; i <= 500; i++) pGrid.push(i / 500);
+
+      const lines = {};
+      for (let j = 0; j < originalColLabels.length; j++) {
+        const c = originalColLabels[j];
+        lines[c] = pGrid.map(p => p * matrixOriginal[0][j] + (1 - p) * matrixOriginal[1][j]);
+      }
+
+      const envelope = pGrid.map((_, idx) => {
+        let mn = Infinity;
+        for (const c of originalColLabels) mn = Math.min(mn, lines[c][idx]);
+        return mn;
+      });
+
+      const solved = solve2xNByCandidates(matrixReduced);
+      const pOpt = solved.p1;
+      const vOpt = solved.value;
+
+      let qReduced = [];
+      if (matrixReduced[0].length === 2) {
+        const a11 = matrixReduced[0][0];
+        const a12 = matrixReduced[0][1];
+        const a21 = matrixReduced[1][0];
+        const a22 = matrixReduced[1][1];
+        const denQ = (a11 - a12) - (a21 - a22);
+        let qFirst = 0.5;
+        if (Math.abs(denQ) > 1e-12) qFirst = (a22 - a12) / denQ;
+        qFirst = Math.max(0, Math.min(1, qFirst));
+        qReduced = [qFirst, 1 - qFirst];
+      } else {
+        qReduced = new Array(matrixReduced[0].length).fill(0);
+      }
+
+      const qFull = new Array(originalColLabels.length).fill(0);
+      for (let i = 0; i < reducedColLabels.length; i++) {
+        const c = reducedColLabels[i];
+        const idx = originalColLabels.indexOf(c);
+        qFull[idx] = qReduced[i] || 0;
+      }
+
+      return {
+        pGrid,
+        lines,
+        envelope,
+        pOpt,
+        p2Opt: 1 - pOpt,
+        qOpt: qFull,
+        value: vOpt
+      };
+    }
+
+    function lpEquivalentSolution(matrixOriginal, reduced, graphResult) {
+      const p = [graphResult.pOpt, graphResult.p2Opt];
+      const q = graphResult.qOpt;
+      return { p, q, value: graphResult.value };
+    }
+
+    function brownRobinson(matrix, iterations) {
+      const m = matrix.length;
+      const n = matrix[0].length;
+      const rowCounts = new Array(m).fill(0);
+      const colCounts = new Array(n).fill(0);
+      const history = [];
+
+      for (let t = 1; t <= iterations; t++) {
+        let i;
+        if (t === 1) {
+          const rowMins = matrix.map(r => Math.min(...r));
+          i = argMax(rowMins);
+        } else {
+          const qPrev = colCounts.map(c => c / (t - 1));
+          const expectedRows = matrix.map(r => dot(r, qPrev));
+          i = argMax(expectedRows);
+        }
+        rowCounts[i] += 1;
+
+        const pCurr = rowCounts.map(c => c / t);
+        const expectedCols = new Array(n).fill(0).map((_, j) => {
+          let s = 0;
+          for (let r = 0; r < m; r++) s += pCurr[r] * matrix[r][j];
+          return s;
+        });
+        const j = argMin(expectedCols);
+        colCounts[j] += 1;
+
+        const sumIfAPure = matrix.map(r => dot(r, colCounts));
+        const upperV = Math.max(...sumIfAPure) / t;
+
+        const sumIfBPure = new Array(n).fill(0).map((_, col) => {
+          let s = 0;
+          for (let r = 0; r < m; r++) s += rowCounts[r] * matrix[r][col];
+          return s;
+        });
+        const lowerV = Math.min(...sumIfBPure) / t;
+
+        const vAvg = 0.5 * (upperV + lowerV);
+        const gap = upperV - lowerV;
+
+        history.push({
+          k: t,
+          A_k: rowLabels[i],
+          B_k: colLabels[j],
+          p1: rowCounts[0] / t,
+          p2: rowCounts[1] / t,
+          q1: colCounts[0] / t,
+          q2: colCounts[1] / t,
+          q3: colCounts[2] / t,
+          lowerV,
+          upperV,
+          vAvg,
+          gap
+        });
+      }
+
+      return {
+        history,
+        pFinal: [rowCounts[0] / iterations, rowCounts[1] / iterations],
+        qFinal: [colCounts[0] / iterations, colCounts[1] / iterations, colCounts[2] / iterations]
+      };
+    }
+
+    function toTable(headers, rows) {
+      let html = "<table><thead><tr>";
+      for (const h of headers) html += `<th>${h}</th>`;
+      html += "</tr></thead><tbody>";
+      for (const row of rows) {
+        html += "<tr>";
+        for (const c of row) html += `<td>${c}</td>`;
+        html += "</tr>";
+      }
+      html += "</tbody></table>";
+      return html;
+    }
+
+    function renderStaticSections(state) {
+      document.getElementById("payoffTable").innerHTML = toTable(
+        ["Стратегия", ...colLabels],
+        [
+          [rowLabels[0], ...A[0]],
+          [rowLabels[1], ...A[1]]
+        ]
+      );
+
+      const dom = findDominatedStrategies(A);
+      const domLines = [];
+      if (dom.dominatedRows.length === 0) domLines.push("Для Игрока A доминируемых стратегий нет.");
+      else dom.dominatedRows.forEach(([k, i]) => domLines.push(`${rowLabels[k]} доминируется ${rowLabels[i]}.`));
+
+      if (dom.dominatedCols.length === 0) domLines.push("Для Игрока B доминируемых стратегий нет.");
+      else dom.dominatedCols.forEach(([l, j]) => domLines.push(`${colLabels[l]} доминируется ${colLabels[j]} (для минимизатора).`));
+
+      domLines.push("После исключения доминируемых стратегий:");
+      domLines.push(state.reduced.steps.map(s => `- ${s}`).join("<br>"));
+
+      document.getElementById("dominationText").innerHTML = `<p>${domLines.join("<br>")}</p>`;
+      document.getElementById("reducedTable").innerHTML = toTable(
+        ["Стратегия", ...state.reduced.cols],
+        [[state.reduced.rows[0], ...state.reduced.matrix[0]], [state.reduced.rows[1], ...state.reduced.matrix[1]]]
+      );
+
+      document.getElementById("saddleTables").innerHTML =
+        `<div class="stat-grid">` +
+        `<div>${toTable(["Стратегия A", "min по строке"], rowLabels.map((r, i) => [r, state.saddle.rowMins[i]]))}</div>` +
+        `<div>${toTable(["Стратегия B", "max по столбцу"], colLabels.map((c, i) => [c, state.saddle.colMaxs[i]]))}</div>` +
+        `</div>`;
+
+      document.getElementById("maxminText").textContent = `maxmin = ${fmt(state.saddle.lowerValue)}`;
+      document.getElementById("minmaxText").textContent = `minmax = ${fmt(state.saddle.upperValue)}`;
+      document.getElementById("saddleNote").innerHTML = state.saddle.hasSaddle
+        ? `<div class="note ok">Седловая точка есть, игра решается в чистых стратегиях.</div>`
+        : `<div class="note warn">Седловой точки нет, нужны смешанные стратегии.</div>`;
+
+      const a11 = state.reduced.matrix[0][0];
+      const a12 = state.reduced.matrix[0][1];
+      const a21 = state.reduced.matrix[1][0];
+      const a22 = state.reduced.matrix[1][1];
+      document.getElementById("graphFormula").innerHTML =
+        `Для сокращенной игры 2x2: g1(p1)=p1*${a11}+(1-p1)*${a21}, g2(p1)=p1*${a12}+(1-p1)*${a22}. ` +
+        `В оптимуме g1(p1*)=g2(p1*), поэтому p1*=${fmt(state.graph.pOpt)}, p2*=${fmt(state.graph.p2Opt)}, V=${fmt(state.graph.value)}.`;
+    }
+
+    function renderGraph(state) {
+      const traces = [];
+      for (const c of colLabels) {
+        traces.push({
+          x: state.graph.pGrid,
+          y: state.graph.lines[c],
+          mode: "lines",
+          name: c,
+          line: c.startsWith("B1") ? { width: 2, dash: "dot" } : { width: 2 }
+        });
+      }
+      traces.push({
+        x: state.graph.pGrid,
+        y: state.graph.envelope,
+        mode: "lines",
+        name: "Нижняя огибающая min_j g_j(p)",
+        line: { width: 4, color: "black" }
+      });
+      traces.push({
+        x: [state.graph.pOpt],
+        y: [state.graph.value],
+        mode: "markers",
+        name: "Оптимум",
+        marker: { size: 10, color: "#dc2626" }
+      });
+
+      Plotly.newPlot("graphChart", traces, {
+        margin: { l: 52, r: 20, t: 30, b: 45 },
+        title: "Функции выигрыша A при p1 = P(A1)",
+        xaxis: { title: "p1", range: [0, 1] },
+        yaxis: { title: "Ожидаемый выигрыш A" },
+        paper_bgcolor: "#ffffff",
+        plot_bgcolor: "#ffffff"
+      }, { responsive: true, displayModeBar: false });
+
+      document.getElementById("graphStats").innerHTML = `
+        <div class="stat"><b>Графоаналитическое p*</b>p1=${fmt(state.graph.pOpt)}, p2=${fmt(state.graph.p2Opt)}</div>
+        <div class="stat"><b>Цена игры V</b>${fmt(state.graph.value)}</div>
+        <div class="stat"><b>Смешанная стратегия B</b>q1=${fmt(state.graph.qOpt[0])}, q2=${fmt(state.graph.qOpt[1])}, q3=${fmt(state.graph.qOpt[2])}</div>
+      `;
+    }
+
+    function renderLP(state) {
+      document.getElementById("lpStats").innerHTML = `
+        <p><span class="mono">Решение ЛП для A: p1=${fmt(state.lp.p[0])}, p2=${fmt(state.lp.p[1])}, V=${fmt(state.lp.value)}</span></p>
+        <p><span class="mono">Решение двойственной ЛП для B: q1=${fmt(state.lp.q[0])}, q2=${fmt(state.lp.q[1])}, q3=${fmt(state.lp.q[2])}, V=${fmt(state.lp.value)}</span></p>
+        <p class="small">На этой странице ЛП вычисляется эквивалентно через редукцию доминируемой стратегии и аналитическое решение 2x2, что совпадает с решением linprog из Streamlit-версии.</p>
+      `;
+    }
+
+    function renderBrownRobinson(state, iterations) {
+      const br = brownRobinson(A, iterations);
+      const last = br.history[br.history.length - 1];
+
+      document.getElementById("brStats").innerHTML = `
+        <div class="stat"><b>Стратегия A (оценка)</b>p1=${fmt(br.pFinal[0])}, p2=${fmt(br.pFinal[1])}</div>
+        <div class="stat"><b>Стратегия B (оценка)</b>q1=${fmt(br.qFinal[0])}, q2=${fmt(br.qFinal[1])}, q3=${fmt(br.qFinal[2])}</div>
+        <div class="stat"><b>Цена игры (оценка)</b>V≈${fmt(last.vAvg)}<br><span class="small">интервал [${fmt(last.lowerV)}; ${fmt(last.upperV)}]</span></div>
+      `;
+
+      Plotly.newPlot("convChart", [
+        { x: br.history.map(r => r.k), y: br.history.map(r => r.lowerV), mode: "lines", name: "Нижняя оценка" },
+        { x: br.history.map(r => r.k), y: br.history.map(r => r.upperV), mode: "lines", name: "Верхняя оценка" },
+        { x: br.history.map(r => r.k), y: br.history.map(r => r.vAvg), mode: "lines", name: "Средняя оценка V" },
+        { x: [1, iterations], y: [state.lp.value, state.lp.value], mode: "lines", name: "V (экв. linprog)", line: { dash: "dash", color: "#16a34a" } }
+      ], {
+        margin: { l: 52, r: 20, t: 30, b: 45 },
+        title: "Сходимость метода Брауна–Робинсона",
+        xaxis: { title: "Итерация" },
+        yaxis: { title: "Оценка цены игры" },
+        paper_bgcolor: "#ffffff",
+        plot_bgcolor: "#ffffff"
+      }, { responsive: true, displayModeBar: false });
+
+      const tail = br.history.slice(-25);
+      const headers = ["k", "A_k", "B_k", "p1", "p2", "q1", "q2", "q3", "lower_v", "upper_v", "v_avg", "gap"];
+      const toRow = (r) => [
+        r.k, r.A_k, r.B_k,
+        fmt(r.p1), fmt(r.p2), fmt(r.q1), fmt(r.q2), fmt(r.q3),
+        fmt(r.lowerV), fmt(r.upperV), fmt(r.vAvg), fmt(r.gap)
+      ];
+
+      document.getElementById("brTailTable").innerHTML = toTable(headers, tail.map(toRow));
+      document.getElementById("brFullTable").innerHTML = toTable(headers, br.history.map(toRow));
+
+      const compareRows = [
+        ["Графоаналитический", fmt(state.graph.pOpt), fmt(state.graph.p2Opt), fmt(state.graph.qOpt[0]), fmt(state.graph.qOpt[1]), fmt(state.graph.qOpt[2]), fmt(state.graph.value)],
+        ["Симплекс (экв. linprog)", fmt(state.lp.p[0]), fmt(state.lp.p[1]), fmt(state.lp.q[0]), fmt(state.lp.q[1]), fmt(state.lp.q[2]), fmt(state.lp.value)],
+        [`Браун–Робинсон (${iterations} ит.)`, fmt(br.pFinal[0]), fmt(br.pFinal[1]), fmt(br.qFinal[0]), fmt(br.qFinal[1]), fmt(br.qFinal[2]), fmt(last.vAvg)]
+      ];
+      document.getElementById("comparisonTable").innerHTML = toTable(["Метод", "p1", "p2", "q1", "q2", "q3", "V"], compareRows);
+    }
+
+    function init() {
+      const reduced = reduceByDominance(A, rowLabels, colLabels);
+      const saddle = saddlePointAnalysis(A);
+      const graph = graphicalSolution2xN(A, reduced.matrix, reduced.cols, colLabels);
+      const lp = lpEquivalentSolution(A, reduced, graph);
+
+      const state = { reduced, saddle, graph, lp };
+      renderStaticSections(state);
+      renderGraph(state);
+      renderLP(state);
+
+      const slider = document.getElementById("iterSlider");
+      const iterVal = document.getElementById("iterVal");
+      const rerender = () => {
+        const iterations = Number(slider.value);
+        iterVal.textContent = String(iterations);
+        renderBrownRobinson(state, iterations);
+      };
+
+      slider.addEventListener("input", rerender);
+      rerender();
+    }
+
+    init();
+  </script>
 </body>
 </html>
